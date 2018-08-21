@@ -60,81 +60,81 @@ function create_sampler(loglik::Function, prior::Prior=Prior())
 end
 
 """
-    set_initial_state!(sph::Sampler, M::Int, init::Param; warmup=Int(floor(M/2)), fixed_knots::Bool=false,
+    set_initial_state!(s::Sampler, M::Int, init::Param; warmup=Int(floor(M/2)), fixed_knots::Bool=false,
                                 time::Vector{Float64}=Vector{Float64}(undef,0), status::Vector{Bool}=Vector{Bool}(undef,0))
 
 Set the initial state of the Markov chain to `init` and allocate arrays holding the posterior samples of `M` total iterations.
 When number and location of the knots are fixed (`fixed_knots == true`) then the vector of event times `time` and the censoring
 indicators `status` 
 """
-function set_initial_state!(sph::Sampler, M::Int, init::Param; warmup=Int(floor(M/2)), fixed_knots::Bool=false,
+function set_initial_state!(s::Sampler, M::Int, init::Param; warmup=Int(floor(M/2)), fixed_knots::Bool=false,
                             time::Vector{Float64}=Vector{Float64}(undef,0), status::Vector{Bool}=Vector{Bool}(undef,0))
     ## number of inner knots
-    sph.N = zeros(Int, M+1)
-    sph.N[1] = length(init.knots)
+    s.N = zeros(Int, M+1)
+    s.N[1] = length(init.knots)
 
     ## candidate knots
-    ##sph.cand_knots = sph.prior.cand_knots ##quantile(data.time[data.status], Array(0.0:1/(N_max+1):1.0))[2:(end-1)]
-    n_candk = length(sph.prior.cand_knots)
+    ##s.cand_knots = s.prior.cand_knots ##quantile(data.time[data.status], Array(0.0:1/(N_max+1):1.0))[2:(end-1)]
+    n_candk = length(s.prior.cand_knots)
 
     ## inner knots
-    sph.knots = Array{Int,2}(undef, M+1, sph.prior.N_max)
-    sph.knots[1,1:sph.N[1]] = init.knots
+    s.knots = Array{Int,2}(undef, M+1, s.prior.N_max)
+    s.knots[1,1:s.N[1]] = init.knots
 
     ## knot occupation indicators
-    sph.knot_ocp = zeros(Int, n_candk)
+    s.knot_ocp = zeros(Int, n_candk)
     ##ck = sort(sample(1:n_candk, N[1])) ##sort(randperm(n_candk)[1:N[1]])
-    sph.knot_ocp[init.knots] .= true
+    s.knot_ocp[init.knots] .= true
 
-    Q = sph.prior.Q
+    Q = s.prior.Q
     
     ## log basis spline weights
-    sph.theta = Array{Float64,2}(undef, M+1, sph.prior.N_max + Q)
-    @assert length(init.theta) == sph.N[1] + Q
-    sph.theta[1,1:(sph.N[1]+Q)] = init.theta
+    s.theta = Array{Float64,2}(undef, M+1, s.prior.N_max + Q)
+    @assert length(init.theta) == s.N[1] + Q
+    s.theta[1,1:(s.N[1]+Q)] = init.theta
     
     if fixed_knots        
         ## we need the baseline hazard basis function at all failure times, and their
         ## integrals (cumulative hazard basis functions) at every event time
-        sph.precalc_haz, sph.precalc_cumhaz = Spline.precalc_spline(time[status], time, init.knots, sph.prior.outer, Q)
+        s.precalc_haz, s.precalc_cumhaz = Spline.precalc_spline(time[status], time, init.knots, s.prior.outer, Q)
     end
       
     ## prior variance of log basis spline weights
-    sph.v = Vector{Float64}(undef,M+1)
-    sph.v[1] = init.v
+    s.v = Vector{Float64}(undef,M+1)
+    s.v[1] = init.v
 
-    sph.warmup = warmup
-    sph.attempt = zeros(Int, 5)
-    sph.accept = zeros(Int, 5)
-    sph.t = 1
+    s.warmup = warmup
+    s.attempt = zeros(Int, 5)
+    s.accept = zeros(Int, 5)
+    s.t = 1
 end
 
-function set_tuner!(sph::Sampler, tuner::Tuner)
-    sph.tuner = tuner
+function set_tuner!(s::Sampler, tuner::Tuner)
+    s.tuner = tuner
 end
 
 """
-    sample!(sph::Sampler, M::Int, init::Param; warmup=Int(floor(M/2)), tuner=Tuner(warmup))
+    sample!(s::Sampler, M::Int, init::Param; warmup=Int(floor(M/2)), tuner=Tuner(warmup))
 
 Perform a total of `M` iterations of the RJ-MCMC starting from initial state `init`. By default half of the total number of iterations are warmup
 iterations where the standard deviation of the proposal distribution for the spline weights is tuned.
 """
-function sample!(sph::Sampler, M::Int, init::Param; warmup=Int(floor(M/2)), tuner=Tuner(warmup))
-    set_initial_state!(sph, M, init; warmup=warmup)
-    set_tuner!(sph, tuner)
+function sample!(s::Sampler, M::Int, init::Param; warmup=Int(floor(M/2)), tuner=Tuner(warmup))
+    set_initial_state!(s, M, init; warmup=warmup)
+    set_tuner!(s, tuner)
     
     for t in 1:M
-        update!(sph, [0.0])
+        update!(s, [0.0])
     end
 end
 
 """
-    extract(sph::Sampler, t::Int)
+    extract(s::Sampler, t::Int)
 
 Return posterior sample of parameters at iteration `t`.
 """
-function extract(sph::Sampler, t::Int)
-    Param(sph.N[t], sph.theta[t,1:(sph.N[t]+sph.prior.Q)], sph.knots[t,1:sph.N[t]], sph.v[t])
+function extract(s::Sampler, t::Int)
+    Param(s.N[t], s.theta[t,1:(s.N[t]+s.prior.Q)], s.knots[t,1:s.N[t]], s.v[t])
 end
 
 """
@@ -142,9 +142,9 @@ end
 
 Returns the posterior spline object of type `Dierckx.Spline1D` of iteration `t`.
 """
-function extract_spline(sph::Sampler, t::Int)
-    p = extract(sph, t)
-    Spline.spline(sph.prior.outer, sph.prior.cand_knots[p.knots], exp.(p.theta), sph.prior.Q-1)
+function extract_spline(s::Sampler, t::Int)
+    p = extract(s, t)
+    Spline.spline(s.prior.outer, s.prior.cand_knots[p.knots], exp.(p.theta), s.prior.Q-1)
 end
 
 """

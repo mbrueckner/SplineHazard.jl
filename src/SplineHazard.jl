@@ -35,8 +35,3 @@ A Julia package for fitting spline based non- and semi-parametric hazard models.
 SplineHazard
 
 end
-
-## TODO:
-## 1. cleanup (style conventions, perf, ...)
-## 4. unit tests
-## 6. push to Github

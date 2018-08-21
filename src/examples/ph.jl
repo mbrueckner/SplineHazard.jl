@@ -1,5 +1,3 @@
-##module PHExample
-
 using Distributions
 
 include("../SplineHazard.jl")
@@ -97,6 +95,6 @@ function ph(data, M=10000)
 end
 
 function ph_example()
-    data = ph_data(n=200, beta=log(0.67))
+    data = ph_data(200, log(0.67))
     ph(data, 10000)
 end

@@ -1,4 +1,4 @@
-using Distributions: rand, quantile, sample, Poisson, InverseGamma, Uniform, Binomial
+using Distributions
 
 include("../SplineHazard.jl")
 
