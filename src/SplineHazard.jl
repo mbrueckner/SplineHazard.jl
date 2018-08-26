@@ -4,7 +4,6 @@ using StatsBase, Statistics, Dierckx, Distributions, DataFrames, RecipesBase
 
 using LinearAlgebra: cholesky!
 
-import Plots.plot
 import Base.summary
 
 export Sampler, Prior, Param, Tuner
@@ -18,8 +17,7 @@ export update!,
     extract_hazard,
     extract_cumhaz,
     extract_survival,
-    summary,
-    plot
+    summary
 
 include("Spline.jl")
 

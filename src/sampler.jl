@@ -226,21 +226,3 @@ function summary(s::Sampler, time::Vector{Float64})
               survival=msci_surv[1], survival_sd=msci_surv[2], survival_lo=msci_surv[3], survival_hi=msci_surv[4])
     
 end
-
-"""
-    plot(s::Sampler, time::Vector{Float64}, var=:hazard)
-
-Plot `var` together with (pointwise) 95% posterior credible intervals. `var` can be `:hazard`, `:cumhazard` or `:survival`.
-"""
-
-@recipe function plot(s::Sampler, time::Vector{Float64}, var=:hazard)
-    df = summary(s, time)
-
-    var_lo = Symbol(string(var, "_lo"))
-    var_hi = Symbol(string(var, "_hi"))
-
-    
-    plot(df[:time], df[var])
-    plot!(df[:time], df[var_lo], linestyle=:dash, linecolor=:red)
-    plot!(df[:time], df[var_hi], linestyle=:dash, linecolor=:red)
-end
