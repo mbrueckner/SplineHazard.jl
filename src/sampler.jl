@@ -233,12 +233,13 @@ end
 Plot `var` together with (pointwise) 95% posterior credible intervals. `var` can be `:hazard`, `:cumhazard` or `:survival`.
 """
 
-function plot(s::Sampler, time::Vector{Float64}, var=:hazard)
+@recipe function plot(s::Sampler, time::Vector{Float64}, var=:hazard)
     df = summary(s, time)
 
     var_lo = Symbol(string(var, "_lo"))
     var_hi = Symbol(string(var, "_hi"))
 
+    
     plot(df[:time], df[var])
     plot!(df[:time], df[var_lo], linestyle=:dash, linecolor=:red)
     plot!(df[:time], df[var_hi], linestyle=:dash, linecolor=:red)

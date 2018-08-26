@@ -1,6 +1,6 @@
 module SplineHazard
 
-using StatsBase, Statistics, Dierckx, Distributions, DataFrames, Plots
+using StatsBase, Statistics, Dierckx, Distributions, DataFrames, RecipesBase
 
 using LinearAlgebra: cholesky!
 

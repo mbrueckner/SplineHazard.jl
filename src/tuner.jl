@@ -18,14 +18,14 @@ than 100 warmup iterations.
 function Tuner(warmup::Int)
     if warmup < 100
         ## no tuning if fewer than 100 warmup iterations
-        Tuner(0, 0, 0, 0, 0, [], [2.38])  
+        Tuner(1, -1, 1, 0, 0, [0.0], [2.38])  
     else
         blk_size = Int(floor(warmup/25))
         n_blk_max = Int(floor(warmup/blk_size))
         theta = zeros(Float64, n_blk_max)
         theta[1:2] = [2.38, 0.1]
         
-        Tuner(n_blk_max, blk_size, 1, 1, 0, zeros(Int, n_blk_max), theta)
+        Tuner(n_blk_max, blk_size, 1, 0, 0, zeros(Int, n_blk_max), theta)
     end
 end
 
