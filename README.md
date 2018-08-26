@@ -3,6 +3,8 @@ SplineHazard.jl
 
 *Julia library for Bayesian non- and semi-parametric hazard models using splines*
 
+[![Build Status](https://travis-ci.org/mbrueckner/SplineHazard.jl.svg?branch=master)](https://travis-ci.org/mbrueckner/SplineHazard.jl)
+
 This is a Julia library implementing the reversible jump MCMC for Bayesian B-spline hazard models
 as described in [Bayesian adaptive B-spline estimation in proportional hazards frailty models](https://projecteuclid.org/euclid.ejs/1278439436) by Sharef et al.
 
