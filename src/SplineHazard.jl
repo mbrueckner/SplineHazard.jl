@@ -2,7 +2,7 @@ module SplineHazard
 
 using StatsBase, Statistics, Dierckx, Distributions, DataFrames
 
-using LinearAlgebra: cholesky!
+using LinearAlgebra: rank, cholesky!
 
 import Base.summary
 
@@ -10,8 +10,10 @@ export Sampler, Prior, Param, Tuner
 
 export update!,
     create_sampler,
+    setup_sampler,
     set_initial_state!,
     sample!,
+    sample_prior,
     set_tuner!,
     extract_spline,
     extract_hazard,

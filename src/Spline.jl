@@ -6,7 +6,7 @@ module Spline
 using Dierckx
 ##using Gadfly
 
-export spline, hazard, cumhaz, precalc_spline, plot_spline, pad_knots
+export spline, hazard, cumhaz, eval_basis, plot_spline, pad_knots, const_spline
 
 ## FIXME: consistent use of Q vs k
 
@@ -29,7 +29,7 @@ function spline(outer::NTuple{2,Float64}, knots::Vector{Float64}, w::Vector{Floa
     
     ## total number of knots
     n = m + k + 1
-
+    
     ## pad knots by repeating outer knot (k+1)-times on each side
     t = Vector{Float64}(undef, n) ##Vector{Float64}(undef,n)  # All knots
     t[(k+2):(end-k-1)] = knots
@@ -38,6 +38,13 @@ function spline(outer::NTuple{2,Float64}, knots::Vector{Float64}, w::Vector{Floa
 
     Spline1D(t, w, k, 3, 0.0)
 end
+
+function const_spline(val::Float64, outer::NTuple{2,Float64}; Q::Int=4)
+    spline(outer, [outer[1] + (outer[2]-outer[1])/2], val .+ zeros(Float64, Q+1), Q-1)
+end
+
+get_inner_knots(s::Dierckx.Spline1D) = s.t[(s.k+2):(end-s.k-1)]
+get_outer_knots(s::Dierckx.Spline1D) = (s.t[1], s.t[end])
 
 function pad_knots(knots::Vector{Float64}, outer::NTuple{2,Float64}, p::Int)
     pk = Vector{Float64}(undef, length(knots) + 2*(p+1))
@@ -70,7 +77,11 @@ function plot_spline(s::Dierckx.Spline1D)
 end
 
 ## Evaluate all basis spline functions at x, and all integrals of spline functions at y
-function precalc_spline(x::Vector{Float64}, y::Vector{Float64}, knots::Vector{Float64}, outer=NTuple{2,Float64}, Q::Int=4)
+function eval_basis(s::Dierckx.Spline1D, x::Vector{Float64}, y::Vector{Float64})
+    eval_basis(x, y, get_inner_knots(s), get_outer_knots(s), s.k+1)
+end
+
+function eval_basis(x::Vector{Float64}, y::Vector{Float64}, knots::Vector{Float64}, outer=NTuple{2,Float64}, Q::Int=4)
     K = length(knots) + Q
     A = Array{Float64,2}(undef, length(x), K)
     B = Array{Float64,2}(undef, length(y), K)

@@ -60,6 +60,27 @@ function create_sampler(loglik::Function, prior::Prior=Prior())
 end
 
 """
+    setup_sampler(M::Int, evtime::Vector{Float64}, loglik::Function; nknots=4, N_max=100)
+
+Create `Sampler` object from log-likelihood `loglik` and initialize with default prior and by default 4 randomly selected knots at quantiles of observed event times 'evtime'. The sampler is setup for 'M' iterations and initial state is set to default values.
+"""
+function setup_sampler(M::Int, evtime::Vector{Float64}, loglik::Function; nknots=4, N_max=100)
+    cand_knots = quantile(evtime, Vector(0.0:1/(N_max+1):1.0))[2:(end-1)]
+    
+    prior = Prior(Poisson(nknots), InverseGamma(0.01, 0.01),
+                  (theta, v) -> sum(theta.^2)/(2*v),
+                  nknots, N_max, cand_knots, (0.0, maximum(evtime)))
+    
+    s = create_sampler(loglik, prior)
+
+    knots0 = sort(sample(1:length(cand_knots), nknots))
+    
+    set_initial_state!(s, M, Param(nknots, zeros(Float64, nknots+4), knots0, 1.0))
+    s.tuner = Tuner(Int(M/2)) ##set_tuner!(s, Tuner(Int(M/2)))
+    s
+end
+
+"""
     set_initial_state!(s::Sampler, M::Int, init::Param; warmup=Int(floor(M/2)), fixed_knots::Bool=false,
                                 time::Vector{Float64}=Vector{Float64}(undef,0), status::Vector{Bool}=Vector{Bool}(undef,0))
 
@@ -111,6 +132,25 @@ end
 
 function set_tuner!(s::Sampler, tuner::Tuner)
     s.tuner = tuner
+end
+
+"""
+    sample_prior(prior::Prior)
+
+Sample spline from 'prior' distribution
+"""
+function sample_prior(prior::Prior)
+    outer = prior.outer
+    cand_knots = prior.cand_knots
+
+    N = rand(prior.N, 1)[1]
+    K = N + prior.Q
+    D = diagm(0 => ones(Float64, K))
+    v = rand(InverseGamma(0.01 + K/2, 25), 1)[1]
+    knots = sort(sample(cand_knots, N; replace=false))
+    theta = rand(MvNormal(D ./ v), 1)[:,1]
+    
+    spline(outer, knots, exp.(theta))
 end
 
 """

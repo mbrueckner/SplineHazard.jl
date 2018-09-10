@@ -57,21 +57,8 @@ end
 
 
 function ph(data, M=10000)
-    max_event = maximum(data.time[data.status])
-
-    N_max = 100
-    cand_knots = quantile(data.time[data.status], Vector(0.0:1/(N_max+1):1.0))[2:(end-1)]
+    s = setup_sampler(M, data.time[data.status], (sp, beta) -> ph_loglik(sp, beta, data))
     
-    prior = Prior(Poisson(4), InverseGamma(0.01, 0.01), (theta, v) -> sum(theta.^2)/(2*v),
-                  4, N_max, cand_knots, (0.0, maximum(data.time[data.status])))
-    
-    s = create_sampler((sp, beta) -> ph_loglik(sp, beta, data), prior)
-
-    knots0 = sort(sample(1:length(cand_knots), 4))
-    
-    set_initial_state!(s, M, Param(4, zeros(Float64, 8), knots0, 1.0))
-    s.tuner = Tuner(Int(M/2)) ##set_tuner!(s, Tuner(Int(M/2)))
-
     beta = Vector{Float64}(undef, M+1)
     beta[1] = 0.0
     beta_ac = 0

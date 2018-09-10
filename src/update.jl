@@ -32,7 +32,7 @@ function update!(s::Sampler, par)
     thac = any(theta_ac) ## 1 if any component of theta has changed, 0 otherwise
     s.accept[4] += thac
     
-    update!(s.tuner, t, thac)
+    update!(s.tuner, thac)
         
     ## update theta variance
     s.attempt[5] += 1
