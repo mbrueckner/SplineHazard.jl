@@ -22,7 +22,7 @@ function Tuner(warmup::Int)
     else
         blk_size = Int(floor(warmup/25))
         n_blk_max = Int(floor(warmup/blk_size))
-        theta = zeros(Float64, n_blk_max)
+        theta = zeros(Float64, n_blk_max+1)
         theta[1:2] = [2.38, 0.1]
         
         Tuner(n_blk_max, blk_size, 1, 1, 0, zeros(Int, n_blk_max), theta)
