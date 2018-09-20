@@ -10,7 +10,7 @@ struct Prior
     outer     ::NTuple{2,Float64} ## outer knot locations
 end
 
-Prior() = Prior(Poisson(4), InverseGamma(0.01, 0.01), (theta, v) -> sum(theta.^2)/(2*v), 4, 100, Vector(0.1:0.1:0.9), (0.0, 1.0))
+Prior() = Prior(Poisson(4), InverseGamma(0.01, 0.01), (theta, v) -> sum(theta.^2)/(2*v), 4, 100, Vector(0.01:0.01:0.99), (0.0, 1.0))
 
 mutable struct Sampler
     loglik::Function    
@@ -117,7 +117,7 @@ function set_initial_state!(s::Sampler, M::Int, init::Param; warmup=Int(floor(M/
     if fixed_knots        
         ## we need the baseline hazard basis function at all failure times, and their
         ## integrals (cumulative hazard basis functions) at every event time
-        s.precalc_haz, s.precalc_cumhaz = Spline.precalc_spline(time[status], time, init.knots, s.prior.outer, Q)
+        s.precalc_haz, s.precalc_cumhaz = Spline.eval_basis(time[status], time, init.knots, s.prior.outer, Q)
     end
       
     ## prior variance of log basis spline weights
@@ -143,7 +143,7 @@ function sample_prior(prior::Prior)
     outer = prior.outer
     cand_knots = prior.cand_knots
 
-    N = rand(prior.N, 1)[1]
+    N = min(rand(prior.N, 1)[1], length(cand_knots))
     K = N + prior.Q
     D = diagm(0 => ones(Float64, K))
     v = rand(InverseGamma(0.01 + K/2, 25), 1)[1]
@@ -204,9 +204,9 @@ Evaluate all posterior hazard function samples at each element of `time`. Ignore
 """
 function extract_hazard(s::Sampler, time::Vector{Float64}; return_warmup=false)
     start = 1 + s.warmup*(1 - return_warmup)
-    res = Array{Float64,2}(undef, tmax, length(time))
+    res = Array{Float64,2}(undef, s.t-start+1, length(time))
     for t in start:s.t
-        res[t,:] = extract_hazard(s, time, t)
+        res[t-start+1,:] = extract_hazard(s, time, t)
     end
     res
 end
@@ -228,9 +228,9 @@ Evaluate all posterior cumulative hazard function samples at each element of `ti
 """
 function extract_cumhaz(s::Sampler, time::Vector{Float64}; return_warmup=false)
     start = 1 + s.warmup*(1 - return_warmup)
-    res = Array{Float64,2}(undef, tmax, length(time))
+    res = Array{Float64,2}(undef, s.t-start+1, length(time))
     for t in start:s.t
-        res[t,:] = extract_cumhaz(s, time, t)
+        res[t-start+1,:] = extract_cumhaz(s, time, t)
     end
     res
 end

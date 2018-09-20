@@ -39,6 +39,12 @@ function spline(outer::NTuple{2,Float64}, knots::Vector{Float64}, w::Vector{Floa
     Spline1D(t, w, k, 3, 0.0)
 end
 
+"""
+    const_spline(val::Float64, outer::NTuple{2,Float64}; Q::Int=4)
+
+Create spline of order `Q` with outer knots at `outer` and all weights equal to `val`. Resulting spline
+is a constant function with value `val` everywhere.
+"""
 function const_spline(val::Float64, outer::NTuple{2,Float64}; Q::Int=4)
     spline(outer, [outer[1] + (outer[2]-outer[1])/2], val .+ zeros(Float64, Q+1), Q-1)
 end
@@ -76,7 +82,11 @@ function plot_spline(s::Dierckx.Spline1D)
     plot(x=x, y=y, Geom.line)
 end
 
-## Evaluate all basis spline functions at x, and all integrals of spline functions at y
+"""
+    eval_basis(s::Dierckx.Spline1D, x::Vector{Float64}, y::Vector{Float64})
+
+Evaluate all basis functions of `s` at `x`, and all integrals of spline functions at `y`.
+"""
 function eval_basis(s::Dierckx.Spline1D, x::Vector{Float64}, y::Vector{Float64})
     eval_basis(x, y, get_inner_knots(s), get_outer_knots(s), s.k+1)
 end

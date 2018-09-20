@@ -2,7 +2,7 @@ module SplineHazard
 
 using StatsBase, Statistics, Dierckx, Distributions, DataFrames
 
-using LinearAlgebra: rank, cholesky!
+using LinearAlgebra: rank, cholesky!, diagm
 
 import Base.summary
 

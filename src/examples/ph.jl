@@ -1,9 +1,7 @@
 using Distributions
 
-include("../SplineHazard.jl")
-
-using Main.SplineHazard
-using Main.SplineHazard.Spline
+using SplineHazard
+using SplineHazard.Spline
 
 function ph_data(n=200, beta=0.0, tmax=36)
     z = rand(Binomial(1, 0.5), n) .- 0.5
