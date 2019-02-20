@@ -60,9 +60,9 @@ function pad_knots(knots::Vector{Float64}, outer::NTuple{2,Float64}, p::Int)
     pk
 end
 
-hazard(x::Vector{Float64}, s::Dierckx.Spline1D) = evaluate(s, x)
-    
-function cumhaz(x::Vector{Float64}, s::Dierckx.Spline1D)
+hazard(x, s::Dierckx.Spline1D) = evaluate(s, x)
+
+function cumhaz(x::Vector{T}, s::Dierckx.Spline1D) where T <: Real
     res = Vector{Float64}(undef, length(x))
     for i in 1:length(x)
         res[i] = integrate(s, 0, x[i])
@@ -70,7 +70,7 @@ function cumhaz(x::Vector{Float64}, s::Dierckx.Spline1D)
     res
 end
 
-cumhaz(x::Float64, s::Dierckx.Spline1D) = integrate(s, 0, x)
+cumhaz(x::T, s::Dierckx.Spline1D) where T <: Real = integrate(s, 0, x)
 
 function plot_spline(s::Dierckx.Spline1D)
     a = s.t[1]

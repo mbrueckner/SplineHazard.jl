@@ -118,15 +118,15 @@ function pdeath(N::Int, prior_N::DiscreteUnivariateDistribution)
     end
 end
 
-function find_interval(knots::Vector{Float64}, x::Float64)
+function find_interval(knots::Vector{T}, x::T) where T <: Real
     n::Int = 0
-    for i in 1:length(knots)
-        if x < knots[i]
+    for kn in knots
+        if x < kn
             break
         end
         n += 1
     end
-    return n
+    n
 end
 
 """
@@ -288,7 +288,6 @@ function move_knot!(s::Sampler, t::Int, par)
 
     n = sample(1:Nt)
     cindex = knots[n]
-    s.knot_ocp[cindex] = false
     s.knots[t+1,1:Nt] = s.knots[t,1:Nt]
 
     ## get range of unoccupied neighbouring knots (including the currently selected knot to be moved)
@@ -311,7 +310,6 @@ function move_knot!(s::Sampler, t::Int, par)
     new_cindex = sample(nbg_knots)
 
     if new_cindex == cindex ## new position same as old
-        s.knot_ocp[cindex] = true
         return false
     else
         tmp = cand_knots[knots]
@@ -324,6 +322,7 @@ function move_knot!(s::Sampler, t::Int, par)
         if log(rand(1)[1]) < logRL
             ## after the moved knot is still at position `n` among all occupied knots
             s.knots[t+1,n] = new_cindex
+            s.knot_ocp[cindex] = false
             s.knot_ocp[new_cindex] = true
             true
         else

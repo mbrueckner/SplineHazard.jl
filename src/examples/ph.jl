@@ -1,5 +1,4 @@
 using Distributions
-
 using SplineHazard
 using SplineHazard.Spline
 
@@ -29,7 +28,7 @@ function ph_loglik(s, beta, data)
     h = hazard(data.time[data.status], s)
     ch = cumhaz(data.time, s)
 
-    sum(log.(h) .+ beta.*data.z[data.status]) - sum(ch.*exp.(beta.*data.z ))
+    sum(log.(h) .+ beta.*data.z[data.status]) - sum(ch.*exp.(beta.*data.z))
 end
 
 function sample_beta(beta::Float64, s::Sampler, data, prior::UnivariateDistribution) 
@@ -43,7 +42,7 @@ function sample_beta(beta::Float64, s::Sampler, data, prior::UnivariateDistribut
         logpdf(prior, x) + sum(status.*x.*X - ch.*exp.(x.*X))
     end
 
-    prop = rand(Normal(beta, 2.38), 1)[1]
+    prop = rand(Normal(beta, 1.0), 1)[1]
     r = log_target(prop) - log_target(beta)
     
     if log(rand(1)[1]) < r
