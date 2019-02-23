@@ -79,7 +79,7 @@ function setup_sampler(M::Int, evtime::Vector{Float64}, loglik::Function; nknots
     knots0 = sort(sample(1:length(cand_knots), nknots))
     
     set_initial_state!(s, M, Param(nknots, zeros(Float64, nknots+4), knots0, 1.0))
-    s.tuner = Tuner(Int(ceil(M/2)) ##set_tuner!(s, Tuner(Int(M/2)))
+    s.tuner = Tuner(Int(ceil(M/2))) ##set_tuner!(s, Tuner(Int(M/2)))
     s
 end
 
