@@ -64,19 +64,22 @@ end
 
 Create `Sampler` object from log-likelihood `loglik` and initialize with default prior and by default 4 randomly selected knots at quantiles of observed event times 'evtime'. The sampler is setup for 'M' iterations and initial state is set to default values.
 """
-function setup_sampler(M::Int, evtime::Vector{Float64}, loglik::Function; nknots=4, N_max=100)
+function setup_sampler(M::Int, evtime::Vector{Float64}, loglik::Function; nknots=4, N_max=100, outer=(0.0, maximum(evtime)))
     cand_knots = quantile(evtime, Vector(0.0:1/(N_max+1):1.0))[2:(end-1)]
+
+    @assert minimum(cand_knots) > outer[1]
+    @assert maximum(cand_knots) < outer[2]
     
     prior = Prior(Poisson(nknots), InverseGamma(0.01, 0.01),
                   (theta, v) -> sum(theta.^2)/(2*v),
-                  nknots, N_max, cand_knots, (0.0, maximum(evtime)))
+                  nknots, N_max, cand_knots, outer)
     
     s = create_sampler(loglik, prior)
 
     knots0 = sort(sample(1:length(cand_knots), nknots))
     
     set_initial_state!(s, M, Param(nknots, zeros(Float64, nknots+4), knots0, 1.0))
-    s.tuner = Tuner(Int(M/2)) ##set_tuner!(s, Tuner(Int(M/2)))
+    s.tuner = Tuner(Int(ceil(M/2)) ##set_tuner!(s, Tuner(Int(M/2)))
     s
 end
 
