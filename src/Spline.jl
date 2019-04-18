@@ -4,6 +4,7 @@ module Spline
 ## http://www.netlib.org/dierckx/
 ## https://github.com/kbarbary/Dierckx.jl
 using Dierckx
+using QuadGK
 ##using Gadfly
 
 export spline, hazard, cumhaz, eval_basis, plot_spline, pad_knots, const_spline
@@ -18,6 +19,8 @@ function spline(outer::NTuple{2,Float64}, knots::Vector{Float64}, w::Vector{Floa
     ## number of basis splines
     m = length(knots) + k + 1
 
+    @assert (outer[1] >= 0.0) & (outer[2] >= 0.0)
+    
     if m != length(w)
         error("number of coefficients must match number of basis splines")
         return NaN
@@ -64,13 +67,19 @@ hazard(x, s::Dierckx.Spline1D) = evaluate(s, x)
 
 function cumhaz(x::Vector{T}, s::Dierckx.Spline1D) where T <: Real
     res = Vector{Float64}(undef, length(x))
-    for i in 1:length(x)
-        res[i] = integrate(s, 0, x[i])
+    for i in eachindex(x)
+        res[i] = quadgk(t -> hazard(t, s), s.t[1], x[i])
+
+        ##if x[i] > s.t[end]
+        ##    res[i] = integrate(s, s.t[1], s.t[end]) + quadgk(t -> hazard(t, s), s.t[end], x[i])
+        ##else
+        ##    res[i] = integrate(s, s.t[1], x[i])
+        ##end
     end
     res
 end
 
-cumhaz(x::T, s::Dierckx.Spline1D) where T <: Real = integrate(s, 0, x)
+cumhaz(x::T, s::Dierckx.Spline1D) where T <: Real = cumhaz([x], s)[1]
 
 function plot_spline(s::Dierckx.Spline1D)
     a = s.t[1]
@@ -85,19 +94,19 @@ end
 """
     eval_basis(s::Dierckx.Spline1D, x::Vector{Float64}, y::Vector{Float64})
 
-Evaluate all basis functions of `s` at `x`, and all integrals of spline functions at `y`.
+Evaluate all basis functions of 1D spline `s` at points `x`, and all integrals of spline functions at `y`.
 """
-function eval_basis(s::Dierckx.Spline1D, x::Vector{Float64}, y::Vector{Float64})
+function eval_basis(s::Dierckx.Spline1D, x::Vector{T}, y::Vector{T}=x) where T <: Real
     eval_basis(x, y, get_inner_knots(s), get_outer_knots(s), s.k+1)
 end
 
-function eval_basis(x::Vector{Float64}, y::Vector{Float64}, knots::Vector{Float64}, outer=NTuple{2,Float64}, Q::Int=4)
+function eval_basis(x::Vector{T}, y::Vector{T}, knots::Vector{T}, outer=NTuple{2,T}, Q::Int=4) where T <: Real
     K = length(knots) + Q
-    A = Array{Float64,2}(undef, length(x), K)
-    B = Array{Float64,2}(undef, length(y), K)
+    A = Matrix{T}(undef, length(x), K)
+    B = Matrix{T}(undef, length(y), K)
     
     for k in 1:K
-        w = zeros(Float64, K)
+        w = zeros(T, K)
         w[k] = 1.0    
         s = spline(outer, knots, w, Q-1)
         A[:,k] = hazard(x, s)
