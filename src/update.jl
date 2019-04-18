@@ -48,7 +48,7 @@ function update!(s::Sampler, par)
         pd = pdeath(Nt, s.prior.N)
         pm = 1 - pb - pd            
         
-        u = rand(1)[1]
+        u = rand()
         
         if (u <= pb) & (Nt < s.prior.N_max)  ## attempt birth step
             s.attempt[1] += 1
@@ -92,10 +92,10 @@ function sample_theta(s::Sampler, t::Int, j::Int, par, gamma::Float64, loglik_in
         loglik_init = log_target(theta[j])
     end
 
-    prop = rand(d, 1)[1] + theta[j]
+    prop = rand(d) + theta[j]
     loglik_prop = log_target(prop)
     
-    if log(rand(1)[1]) < (loglik_prop - loglik_init)
+    if log(rand()) < (loglik_prop - loglik_init)
         return prop, true, loglik_prop
     else
         return theta[j], false, loglik_init

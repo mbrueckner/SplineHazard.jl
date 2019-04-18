@@ -24,8 +24,8 @@ end
 nonpar_loglik(s, data) = sum(log.(hazard(data.time[data.status], s))) - sum(cumhaz(data.time, s))
 
 function nonpar(data, M=10000)
-    s = setup_sampler(M, data.time[data.status], sp -> nonpar_loglik(sp, data))
-    sample!(s, M, Param(4, zeros(Float64, 8), knots0, 1.0))
+    s = setup_sampler(M, data.time[data.status], (sp,par) -> nonpar_loglik(sp, data))
+    SplineHazard.sample!(s, M, SplineHazard.extract(s, 1))
     summary(s, data.time)
 end
 

@@ -162,12 +162,12 @@ end
 Perform a total of `M` iterations of the RJ-MCMC starting from initial state `init`. By default half of the total number of iterations are warmup
 iterations where the standard deviation of the proposal distribution for the spline weights is tuned.
 """
-function sample!(s::Sampler, M::Int, init::Param; warmup=Int(floor(M/2)), tuner=Tuner(warmup))
+function sample!(s::Sampler, M::Int, init::Param=extract(s, 1); warmup=Int(floor(M/2)), tuner=Tuner(warmup))
     set_initial_state!(s, M, init; warmup=warmup)
     set_tuner!(s, tuner)
     
     for t in 1:M
-        update!(s, [0.0])
+        update!(s, nothing)
     end
 end
 

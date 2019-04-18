@@ -2,7 +2,7 @@ using Distributions
 using SplineHazard
 using SplineHazard.Spline
 
-function ph_data(n=200, beta=0.0, tmax=36)
+function ph_data(n=200, beta=0.0, tmax=36.0)
     z = rand(Binomial(1, 0.5), n) .- 0.5
 
     ## 25 patients per month
@@ -22,6 +22,33 @@ function ph_data(n=200, beta=0.0, tmax=36)
     id = 1:n
     
     (id=id, entry=entry, time=time, status=status, z=z)
+end
+
+function ph_data_llog(n=200, beta=0.0, tmax=36.0)
+    z = rand(Binomial(1, 0.5), n) .- 0.5
+
+    ## 25 patients per month
+    max_entry = n / 25
+    
+    entry = rand(Uniform(0, max_entry), n)
+    U = 1 .- rand(Uniform(0, 1), n)
+    T = Vector{Float64}(undef, n)
+    for i in 1:n
+        ##T[i] = exp(quantile(Logistic(log(12), 1/6), 1 - exp(log(U[i])*exp(-beta*z[i]))))
+    end
+        
+    C = min.(rand(Uniform(0, 3*36), n), tmax)
+   
+    time = min.(T, C)
+    status = T .< C
+    id = 1:n
+    
+    (id=id, entry=entry, time=time, status=status, z=z)
+end
+
+function llog_hazard(time, a, b)
+    d = Logistic(a, b)
+    DataFrame(time=time, hazard=pdf.(d, time) ./ (1 .- cdf.(d, time)))
 end
 
 function ph_loglik(s, beta, data)    
@@ -45,7 +72,7 @@ function sample_beta(beta::Float64, s::Sampler, data, prior::UnivariateDistribut
     prop = rand(Normal(beta, 1.0), 1)[1]
     r = log_target(prop) - log_target(beta)
     
-    if log(rand(1)[1]) < r
+    if log(rand()) < r
         return prop, true
     else
         return beta, false
