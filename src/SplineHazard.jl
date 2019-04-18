@@ -1,6 +1,6 @@
 module SplineHazard
 
-using StatsBase, Statistics, Dierckx, Distributions, DataFrames
+using StatsBase, Statistics, Dierckx, Distributions, DataFrames, QuadGK
 
 using LinearAlgebra: rank, cholesky!, diagm
 
