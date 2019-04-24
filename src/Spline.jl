@@ -65,16 +65,15 @@ end
 
 hazard(x, s::Dierckx.Spline1D) = evaluate(s, x)
 
+## evaluate cumulative hazard from 0.0 to x
 function cumhaz(x::Vector{T}, s::Dierckx.Spline1D) where T <: Real
     res = Vector{Float64}(undef, length(x))
     for i in eachindex(x)
-        res[i] = quadgk(t -> hazard(t, s), s.t[1], x[i])[1]
-
-        ##if x[i] > s.t[end]
-        ##    res[i] = integrate(s, s.t[1], s.t[end]) + quadgk(t -> hazard(t, s), s.t[end], x[i])[1]
-        ##else
-        ##    res[i] = integrate(s, s.t[1], x[i])
-        ##end
+        if (s.t[1] <= 0.0) & (x[i] <= s.t[end])
+            res[i] = integrate(s, 0.0, x[i])
+        else            
+            res[i] = quadgk(t -> hazard(t,s), 0.0, x[i])[1]
+        end
     end
     res
 end
